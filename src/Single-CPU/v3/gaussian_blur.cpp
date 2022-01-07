@@ -8,13 +8,29 @@
 
 int read_png(const char *filename, unsigned char **image, unsigned *height, unsigned *width, unsigned *channels);
 void write_png(const char *filename, png_bytep image, const unsigned height, const unsigned width, const unsigned channels);
-void gaussian_blur(unsigned char **src_image, unsigned char **tar_image, const unsigned height, const unsigned width, const unsigned channels, const unsigned r);
+void gaussian_blur(unsigned char **src_image, unsigned char **tar_image, const unsigned height, const unsigned width,
+            const unsigned channels, const unsigned r, double **filter_matrix, double wsum);
+void gaussian_filter(const unsigned r, double **filter_matrix, double *wsum);
+
+// calculate time
+struct timespec start, timeEnd;
+double total_time = 0.0;
+double timeDiff(struct timespec start, struct timespec timeEnd){
+    // function used to measure time in nano resolution
+    float output;
+    float nano = 1000000000.0;
+    if(timeEnd.tv_nsec < start.tv_nsec) output = ((timeEnd.tv_sec - start.tv_sec -1)+(nano+timeEnd.tv_nsec-start.tv_nsec)/nano);
+    else output = ((timeEnd.tv_sec - start.tv_sec)+(timeEnd.tv_nsec-start.tv_nsec)/nano);
+    return output;
+}
 
 int main(int argc, char **argv)
 {
     unsigned height, width, channels, kernel;
     unsigned char *image = NULL;
     unsigned char *tar_image = NULL;
+    double *filter_matrix;
+    double wsum = 0;
     unsigned r = strtol(argv[3], 0, 10);
 
     // read image
@@ -26,13 +42,18 @@ int main(int argc, char **argv)
 
     // start to calculate guassian blur value
     tar_image = (unsigned char*)malloc(sizeof(unsigned char) * height * width * channels);
-    gaussian_blur(&image, &tar_image, height, width, channels, r);
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    gaussian_filter(r, &filter_matrix, &wsum);
+    gaussian_blur(&image, &tar_image, height, width, channels, r, &filter_matrix, wsum);
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd);
+    total_time += timeDiff(start, timeEnd);
 
     // write image back
     write_png(argv[2], tar_image, height, width, channels);
 
     std::cout << "[Info]: Result saved in " << argv[2] << std::endl;
     std::cout << "[Info]: Calculation -------- SUCCESS\n";
+    std::cout << "[Info]: Total Executioin time = " << total_time << std::endl;
 
     // free image array
     free(image);
@@ -41,29 +62,44 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void gaussian_blur(unsigned char **src_image, unsigned char **tar_image, const unsigned height, const unsigned width, const unsigned channels, const unsigned r) {
+void gaussian_filter(const unsigned r, double **filter_matrix, double *wsum) {
     int rs = ceil((double)r * 2.57);
-    int x, y, dsq;
-    double val[channels];
-    double wght, wsum;
+    int dsq;
     double a = (double)(PI * 2 * r * r);
+    double b = 2 * r * r;
+    double wght;
+    
+    (*filter_matrix) = (double*)malloc(sizeof(double) * (2 * rs + 1) * (2 * rs + 1));
+
+    for (int i = 0; i <= 2 * rs; i++) {
+        for (int j = 0; j <= 2 * rs; j++) {
+            dsq = (i - rs) * (i - rs) + (j - rs) * (j - rs);
+            wght = exp((double)(-1 * dsq) / b) / a;
+            (*filter_matrix)[(2 * rs + 1) * i + j] = wght;
+            (*wsum) += wght;
+        }
+     }
+}
+
+void gaussian_blur(unsigned char **src_image, unsigned char **tar_image, const unsigned height, const unsigned width,
+                const unsigned channels, const unsigned r, double **filter_matrix, double wsum) {
+    int rs = ceil((double)r * 2.57);
+    int x, y;
+    double val[channels];
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            wsum = 0;
             for (int now = 0; now < channels; now++) val[now] = 0;
-            for (int iy = i - rs; iy < i + rs + 1; iy++) {
-                for (int ix = j - rs; ix < j + rs + 1; ix++) {
+            for (int iy = i - rs, a = 0; iy < i + rs + 1; iy++, a++) {
+                for (int ix = j - rs, b = 0; ix < j + rs + 1; ix++, b++) {
                     x = std::min((int)width-1, std::max(0, ix));
                     y = std::min((int)height-1, std::max(0, iy));
-                    dsq = (ix-j) * (ix-j) + (iy-i) * (iy-i);
-                    wght = exp((double)(-1 * dsq) / (double)(2 * r * r)) / a;
+
                     //std::cout<< wght << std::endl;
-                    for (unsigned now = 0; now < channels; now++) val[now] += (*src_image)[channels * (y * width + x) + now] * wght;
-                    wsum += wght;
+                    for (unsigned now = 0; now < channels; now++) val[now] += (*src_image)[channels * (y * width + x) + now] * (*filter_matrix)[(2*rs+1)*a + b];
                 }
             }
-            for (unsigned now = 0; now < channels; now++) (*tar_image)[channels * (i * width + j) + now] = round(val[now]/wsum);
+            for (unsigned now = 0; now < channels; now++) (*tar_image)[channels * (i * width + j) + now] = round(val[now] / wsum);
         }
     }
 }

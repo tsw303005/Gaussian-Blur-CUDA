@@ -1,5 +1,5 @@
-CC = clang
-CXX = clang++
+CC = gcc
+CXX = g++
 CXXFLAGS = -O3 -lm -std=c++11 -lpng
 CFLAGS = -O3 -lm -std=c++11 -lpng
 TARGETS = gaussian_blur
