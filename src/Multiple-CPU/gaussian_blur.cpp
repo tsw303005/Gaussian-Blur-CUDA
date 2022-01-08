@@ -3,6 +3,7 @@
 #include <string>
 #include <png.h>
 #include <algorithm>
+#include <omp.h>
 
 #define PI std::acos(-1)
 
@@ -88,16 +89,19 @@ void gaussian_blur(unsigned char **src_image, unsigned char **tar_image, const u
     int x, y;
     double val[channels];
 
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             for (int now = 0; now < channels; now++) val[now] = 0;
             for (int iy = i - rs, a = 0; iy < i + rs + 1; iy++, a++) {
+                #pragma unroll(5)
                 for (int ix = j - rs, b = 0; ix < j + rs + 1; ix++, b++) {
                     x = std::min((int)width-1, std::max(0, ix));
                     y = std::min((int)height-1, std::max(0, iy));
 
-                    //std::cout<< wght << std::endl;
-                    for (unsigned now = 0; now < channels; now++) val[now] += (*src_image)[channels * (y * width + x) + now] * (*filter_matrix)[(2*rs+1)*a + b];
+                    val[0] += (*src_image)[channels * (y * width + x) + 0] * (*filter_matrix)[(2*rs+1)*a + b];
+                    val[1] += (*src_image)[channels * (y * width + x) + 1] * (*filter_matrix)[(2*rs+1)*a + b];
+                    val[2] += (*src_image)[channels * (y * width + x) + 2] * (*filter_matrix)[(2*rs+1)*a + b];
                 }
             }
             for (unsigned now = 0; now < channels; now++) (*tar_image)[channels * (i * width + j) + now] = round(val[now] / wsum);

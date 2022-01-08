@@ -15,6 +15,18 @@ void write_png(const char *filename, png_bytep image, const unsigned height, con
 void gaussian_filter(double **host_filter_matrix, double *wsum);
 __global__ void gaussian_blur(unsigned char *src, unsigned char *tar, double *device_filter_matrix, unsigned height, unsigned width, unsigned channels, double wsum);
 
+// calculate time
+struct timespec start, timeEnd;
+double total_time = 0.0;
+double timeDiff(struct timespec start, struct timespec timeEnd){
+    // function used to measure time in nano resolution
+    float output;
+    float nano = 1000000000.0;
+    if(timeEnd.tv_nsec < start.tv_nsec) output = ((timeEnd.tv_sec - start.tv_sec -1)+(nano+timeEnd.tv_nsec-start.tv_nsec)/nano);
+    else output = ((timeEnd.tv_sec - start.tv_sec)+(timeEnd.tv_nsec-start.tv_nsec)/nano);
+    return output;
+}
+
 int main(int argc, char **argv)
 {
     unsigned height, width, channels;
@@ -41,7 +53,11 @@ int main(int argc, char **argv)
     cudaMemcpy(device_src, host_src, height * width * channels * sizeof(unsigned char), cudaMemcpyHostToDevice);
 
     // precalculate gaussian filter
+    clock_gettime(CLOCK_MONOTONIC, &start); // get start time
     gaussian_filter(&host_filter_matrix, &wsum);
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd); // get end time
+    total_time += timeDiff(start, timeEnd); // update computation time
+
     cudaMalloc(&device_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1));
     cudaMemcpy(device_filter_matrix, host_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1), cudaMemcpyHostToDevice);
 
@@ -52,7 +68,10 @@ int main(int argc, char **argv)
     dim3 blocks(x, y);
 
     // gaussian blur algorithm
+    clock_gettime(CLOCK_MONOTONIC, &start); // get start time
     gaussian_blur<<<blocks, thread_num>>>(device_src, device_tar, device_filter_matrix, height, width, channels, wsum);
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd); // get end time
+    total_time += timeDiff(start, timeEnd); // update computation time
 
     // write result back to host
     cudaMemcpy(host_tar, device_tar, height * width * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
@@ -62,6 +81,7 @@ int main(int argc, char **argv)
 
     std::cout << "[Info]: Result saved in " << argv[2] << std::endl;
     std::cout << "[Info]: Calculation -------- SUCCESS\n";
+    std::cout << "[Info]: Total Executioin time = " << total_time << std::endl;
 
     // free image array
     free(host_src);
