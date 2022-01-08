@@ -13,7 +13,8 @@ void gaussian_blur(unsigned char **src_image, unsigned char **tar_image, const u
 
 // calculate time
 struct timespec start, timeEnd;
-double total_time = 0.0;
+double com_time = 0.0;
+double io_time = 0.0;
 double timeDiff(struct timespec start, struct timespec timeEnd){
     // function used to measure time in nano resolution
     float output;
@@ -31,26 +32,33 @@ int main(int argc, char **argv)
     unsigned r = strtol(argv[3], 0, 10);
 
     // read image
+    clock_gettime(CLOCK_MONOTONIC, &start);
     if (read_png(argv[1], &image, &height, &width, &channels)) {
         std::cout << "[Info]: Cannot read image file \n\n";
         std::cout << "[Info]: Calculation -------- FAIL\n";
         exit(1);
     }
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd);
+    io_time += timeDiff(start, timeEnd);
 
     tar_image = (unsigned char*)malloc(sizeof(unsigned char) * height * width * channels);
     clock_gettime(CLOCK_MONOTONIC, &start);
     // start to calculate guassian blur value
     gaussian_blur(&image, &tar_image, height, width, channels, r);
     clock_gettime(CLOCK_MONOTONIC, &timeEnd);
-    total_time += timeDiff(start, timeEnd);
+    com_time += timeDiff(start, timeEnd);
 
 
     // write image back
+    clock_gettime(CLOCK_MONOTONIC, &start);
     write_png(argv[2], tar_image, height, width, channels);
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd);
+    io_time += timeDiff(start, timeEnd);
 
     std::cout << "[Info]: Result saved in " << argv[2] << std::endl;
     std::cout << "[Info]: Calculation -------- SUCCESS\n";
-    std::cout << "[Info]: Total Executioin time = " << total_time << std::endl;
+    std::cout << "[Info]: Computation time = " << com_time << std::endl;
+    std::cout << "[Info]: IO time = " << io_time << std::endl;
 
     // free image array
     free(image);

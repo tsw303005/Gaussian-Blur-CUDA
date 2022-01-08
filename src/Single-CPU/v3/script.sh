@@ -1,5 +1,5 @@
 #!/bin/bash
 make clean
 make
-./gaussian_blur ../../../testcase/origin/candy.png ../../../testcase/result/candy.png 10
+srun -n1 -c1 ./gaussian_blur ../../../testcase/origin/bridge.png ../../../testcase/result/bridge.png 10
 make clean

@@ -27,8 +27,35 @@ Before | After
 
 
 ## Experiment
+### Single Thread with different Optimization Skill
+- Compare their **computation time** in same testcase
+- V1: Original Gaussian Blur Algorithm
+- V2: Add ffast-math flag to speed up the math operation
+- V3: Calculate Gaussian Filter to save redundant operation
+
+
+Filename | Size | V1 | V2 | V3
+:----------:|:-----------------:|:-------------------:|:----------:|:-----------------:
+bridge.png|2.1 MB|151.34(s)|123.039(s)|35.3384(s)
+
+Time Profile | Speedup Factor
+:------------:|:---------------:|
+![](./testcase/result/CPU-Optimization-Compare_timeprofile.png) | ![](./testcase/result/CPU-Optimization-Compare_speedup.png)
+
+### Performance Comparison with different Thread number
+Filename | Size | 1 thread | 2 thread | 4 thread | 8 thread | 12 thread
+:----------:|:-----------------:|:-------------------:|:----------:|:-----------------:|:--------------:|:------
+view.png|2.1 MB|25.0505(s)|12.566(s)|6.27131(s)|4.83035(s)|2.14292(s)
+
+Time Profile | Speedup Factor
+:------------:|:---------------:|
+![](./testcase/result/Different-Thread-Compare_timeprofile.png) | ![](./testcase/result/Different-Thread-Compare_speedup.png)
+
+
+### Performance Comparison between Sequential, OpenMP, CUDA
 - Filter Matrix size: 53*53
 - Multiple threads: 8
+- V3 version sequential implementation
 
 Filename |Size|Single thread|Multiple threads|Single GPU
 :----------:|:-----------------:|:-------------------:|:----------:|:-----------------:
@@ -40,7 +67,7 @@ candy.png|13.9 MB|362.181(s)|36.6829(s)|2.43379(s)|
 
 Time Profile | Speedup Factor
 :------------:|:---------------:|
-![](./testcase/result/Iceberg_timeprofile.png) | ![](./testcase/result/Iceberg_speedup.png)
+![](./testcase/result/iceberg_timeprofile.png) | ![](./testcase/result/iceberg_speedup.png)
 ![](./testcase/result/mountain_timeprofile.png) | ![](./testcase/result/mountain_speedup.png)
 ![](./testcase/result/bridge_timeprofile.png) | ![](./testcase/result/bridge_speedup.png)
 ![](./testcase/result/view_timeprofile.png) | ![](./testcase/result/view_speedup.png)
