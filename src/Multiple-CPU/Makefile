@@ -1,7 +1,7 @@
 CC = clang
 CXX = clang++
-CXXFLAGS = -O3 -fopenmp -march=native --fast-math
-CFLAGS = -O3 -lm -fopenmp -march=native --fast-math
+CXXFLAGS = -O3 -fopenmp -march=native -ffast-math -lpng
+CFLAGS = -O3 -lm -fopenmp -march=native -ffast-math -lpng
 EXES     := gaussian_blur
 
 alls: $(EXES)
