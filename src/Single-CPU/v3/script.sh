@@ -1,5 +1,5 @@
 #!/bin/bash
 make clean
 make
-./gaussian_blur ../../../testcase/origin/mountain.png ../../../testcase/result/mountain.png 3
+./gaussian_blur ../../../testcase/origin/candy.png ../../../testcase/result/candy.png 3
 make clean

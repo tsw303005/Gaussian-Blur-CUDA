@@ -70,6 +70,8 @@ void gaussian_filter(const unsigned r, double **filter_matrix, double *wsum) {
     double a = (double)(PI * 2 * r * r);
     double b = 2 * r * r;
     double wght;
+    std::cout << "r = " << r << std::endl;
+    std::cout << "Rs = " << (2 * rs + 1) << std::endl;
     
     (*filter_matrix) = (double*)malloc(sizeof(double) * (2 * rs + 1) * (2 * rs + 1));
 
