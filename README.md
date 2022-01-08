@@ -37,3 +37,11 @@ mountain.png|1.9 MB|23.9481(s)|2.5741(s)|0.594938(s)|
 bridge.png |2.1 MB|35.1401(s)|3.69399(s)|0.647862(s)|
 view.png|2.4 MB|46.6573(s)|4.82201(s)|0.701165(s)|
 candy.png|13.9 MB|362.181(s)|36.6829(s)|2.43379(s)|
+
+Time Profile | Speedup Factor
+:------------:|:---------------:|
+![](./testcase/result/Iceberg_timeprofile.png) | ![](./testcase/result/Iceberg_speedup.png)
+![](./testcase/result/mountain_timeprofile.png) | ![](./testcase/result/mountain_speedup.png)
+![](./testcase/result/bridge_timeprofile.png) | ![](./testcase/result/bridge_speedup.png)
+![](./testcase/result/view_timeprofile.png) | ![](./testcase/result/view_speedup.png)
+![](./testcase/result/candy_timeprofile.png) | ![](./testcase/result/candy_speedup.png)
