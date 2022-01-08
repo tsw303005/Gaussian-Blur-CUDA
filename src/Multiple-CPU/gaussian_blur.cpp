@@ -3,6 +3,7 @@
 #include <string>
 #include <png.h>
 #include <algorithm>
+#include <omp.h>
 
 #define PI std::acos(-1)
 
@@ -84,23 +85,32 @@ void gaussian_filter(const unsigned r, double **filter_matrix, double *wsum) {
 
 void gaussian_blur(unsigned char **src_image, unsigned char **tar_image, const unsigned height, const unsigned width,
                 const unsigned channels, const unsigned r, double **filter_matrix, double wsum) {
-    int rs = ceil((double)r * 2.57);
-    int x, y;
-    double val[channels];
+    cpu_set_t cpu_set;
+    sched_getaffinity(0, sizeof(cpu_set), &cpu_set);
+    int ncpus = CPU_COUNT(&cpu_set);
 
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            for (int now = 0; now < channels; now++) val[now] = 0;
-            for (int iy = i - rs, a = 0; iy < i + rs + 1; iy++, a++) {
-                for (int ix = j - rs, b = 0; ix < j + rs + 1; ix++, b++) {
-                    x = std::min((int)width-1, std::max(0, ix));
-                    y = std::min((int)height-1, std::max(0, iy));
+    #pragma omp parallel num_threads(ncpus) shared(src_image, tar_image, wsum, filter_matrix, channels, width, height)
+    {
+        int rs = ceil((double)r * 2.57);
+        int x, y;
+        double val[channels];
+        for (int i = omp_get_thread_num(); i < height; i+=omp_get_num_threads()) {
+            //std::cout<< omp_get_thread_num() << ' ' << i << std::endl;
+            for (int j = 0; j < width; j++) {
+                for (int now = 0; now < channels; now++) val[now] = 0;
+                for (int iy = i - rs, a = 0; iy < i + rs + 1; iy++, a++) {
+                    #pragma unroll(5)
+                    for (int ix = j - rs, b = 0; ix < j + rs + 1; ix++, b++) {
+                        x = std::min((int)width-1, std::max(0, ix));
+                        y = std::min((int)height-1, std::max(0, iy));
 
-                    //std::cout<< wght << std::endl;
-                    for (unsigned now = 0; now < channels; now++) val[now] += (*src_image)[channels * (y * width + x) + now] * (*filter_matrix)[(2*rs+1)*a + b];
+                        val[0] += (*src_image)[channels * (y * width + x) + 0] * (*filter_matrix)[(2*rs+1)*a + b];
+                        val[1] += (*src_image)[channels * (y * width + x) + 1] * (*filter_matrix)[(2*rs+1)*a + b];
+                        val[2] += (*src_image)[channels * (y * width + x) + 2] * (*filter_matrix)[(2*rs+1)*a + b];
+                    }
                 }
+                for (unsigned now = 0; now < channels; now++) (*tar_image)[channels * (i * width + j) + now] = round(val[now] / wsum);
             }
-            for (unsigned now = 0; now < channels; now++) (*tar_image)[channels * (i * width + j) + now] = round(val[now] / wsum);
         }
     }
 }
