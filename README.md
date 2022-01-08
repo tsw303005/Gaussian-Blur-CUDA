@@ -6,7 +6,7 @@ We implement Sequential, OpenMP, CUDA to compare their performance
 - OpenMP
 - CUDA
 
-## Getting Stared
+## Getting Started
 1. cd into the directory
 2. modify the script.sh to choose the input image you want
 3. execute the script.sh </br>
