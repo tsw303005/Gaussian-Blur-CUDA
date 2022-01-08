@@ -37,3 +37,8 @@ mountain.png|1.9 MB|23.9481(s)|2.5741(s)|0.594938(s)|
 bridge.png |2.1 MB|35.1401(s)|3.69399(s)|0.647862(s)|
 view.png|2.4 MB|46.6573(s)|4.82201(s)|0.701165(s)|
 candy.png|13.9 MB|362.181(s)|36.6829(s)|2.43379(s)|
+
+## Acknowledge
+Our Gaussian Blur implementation is mainly based on the following two website.
+- [Gaussian Blur introduction](https://en.wikipedia.org/wiki/Gaussian_blur)
+- [Gaussian Blur implementation](http://blog.ivank.net/fastest-gaussian-blur.html)
