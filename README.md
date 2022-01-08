@@ -45,3 +45,7 @@ Time Profile | Speedup Factor
 ![](./testcase/result/bridge_timeprofile.png) | ![](./testcase/result/bridge_speedup.png)
 ![](./testcase/result/view_timeprofile.png) | ![](./testcase/result/view_speedup.png)
 ![](./testcase/result/candy_timeprofile.png) | ![](./testcase/result/candy_speedup.png)
+## Acknowledge
+Our Gaussian Blur implementation is mainly based on the following two website.
+- [Gaussian Blur introduction](https://en.wikipedia.org/wiki/Gaussian_blur)
+- [Gaussian Blur implementation](http://blog.ivank.net/fastest-gaussian-blur.html)
