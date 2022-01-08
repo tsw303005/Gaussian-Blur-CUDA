@@ -5,10 +5,10 @@
 #include <algorithm>
 
 #define PI std::acos(-1)
-#define r 3
+#define r 10
 #define rs (int)ceil((double)r * 2.57)
-#define Rs 17
-#define THREAD 512
+#define Rs 53
+#define THREAD 256
 
 int read_png(const char *filename, unsigned char **image, unsigned *height, unsigned *width, unsigned *channels);
 void write_png(const char *filename, png_bytep image, const unsigned height, const unsigned width, const unsigned channels);
@@ -48,15 +48,13 @@ int main(int argc, char **argv)
     // allocate memory
     host_tar = (unsigned char*)malloc(sizeof(unsigned char) * height * width * channels);
     // allocate device_src more memory to prevent out of memory
+    clock_gettime(CLOCK_MONOTONIC, &start); // get start time
     cudaMalloc(&device_src, height * (width + THREAD) * channels * sizeof(unsigned char));
     cudaMalloc(&device_tar, height * width * channels * sizeof(unsigned char));
     cudaMemcpy(device_src, host_src, height * width * channels * sizeof(unsigned char), cudaMemcpyHostToDevice);
 
     // precalculate gaussian filter
-    clock_gettime(CLOCK_MONOTONIC, &start); // get start time
     gaussian_filter(&host_filter_matrix, &wsum);
-    clock_gettime(CLOCK_MONOTONIC, &timeEnd); // get end time
-    total_time += timeDiff(start, timeEnd); // update computation time
 
     cudaMalloc(&device_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1));
     cudaMemcpy(device_filter_matrix, host_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1), cudaMemcpyHostToDevice);
@@ -68,13 +66,12 @@ int main(int argc, char **argv)
     dim3 blocks(x, y);
 
     // gaussian blur algorithm
-    clock_gettime(CLOCK_MONOTONIC, &start); // get start time
     gaussian_blur<<<blocks, thread_num>>>(device_src, device_tar, device_filter_matrix, height, width, channels, wsum);
-    clock_gettime(CLOCK_MONOTONIC, &timeEnd); // get end time
-    total_time += timeDiff(start, timeEnd); // update computation time
 
     // write result back to host
     cudaMemcpy(host_tar, device_tar, height * width * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd); // get end time
+    total_time += timeDiff(start, timeEnd); // update computation time
 
     // write image back
     write_png(argv[2], host_tar, height, width, channels);
