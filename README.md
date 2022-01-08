@@ -1,5 +1,6 @@
 # Gaussian-Blur-CUDA
-We implement Sequential, OpenMP, CUDA to compare their performance
+- We implement Gaussian Blur with C++ (Sequential), OpenMP, and CUDA
+- We used different size image to compare their performance
 
 ## Build with
 - C++
@@ -9,7 +10,7 @@ We implement Sequential, OpenMP, CUDA to compare their performance
 ## Getting Started
 1. cd into the directory
 2. modify the script.sh to choose the input image you want
-3. execute the script.sh </br>
+3. execute the script.sh (with Makefile)</br>
 - Example to execute single-gpu program (make sure that you have already had gpu and cuda installed)
 
 ```
