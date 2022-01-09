@@ -27,6 +27,8 @@ Before | After
 
 
 ## Experiment
+- CPU: Intel(R) Xeon(R) CPU           X5670  @ 2.93GHz
+- GPU: GEFORCE GTX 1080 Ti
 ### Single Thread with different Optimization Skill
 - Compare their **computation time** in same testcase
 - V1: Original Gaussian Blur Algorithm
