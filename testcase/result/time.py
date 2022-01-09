@@ -12,6 +12,7 @@ filename = "candy"
 fig, ax = plt.subplots()
 x = np.arange(len(time))
 ax.bar(run, time, label="Execuation Time")
+ax.set_xlabel("GPU Numbers")
 ax.set_ylabel("Runtime (seconds)")
 ax.set_title(f"{filename} Time Profile")
 ax.legend(loc="upper right")
