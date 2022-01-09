@@ -75,6 +75,12 @@ Time Profile | Speedup Factor
 ![](./testcase/result/bridge_timeprofile.png) | ![](./testcase/result/bridge_speedup.png)
 ![](./testcase/result/view_timeprofile.png) | ![](./testcase/result/view_speedup.png)
 ![](./testcase/result/candy_timeprofile.png) | ![](./testcase/result/candy_speedup.png)
+
+### GPU performance on Big Size Data
+Filename |Size|One GPU|Two GPU|
+:----------:|:-----------------:|:-------------------:|:----------:|
+candy.png | 13.9 MB | 2.43379(s) | 1.1862(s)
+
 ## Acknowledge
 Our Gaussian Blur implementation is mainly based on the following two website.
 - [Gaussian Blur introduction](https://en.wikipedia.org/wiki/Gaussian_blur)

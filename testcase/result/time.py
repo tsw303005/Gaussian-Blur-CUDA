@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 
 run = ["Single Thread", "Multiple Thread", "Single GPU", "Multiple GPU"]
-time = [12.6372, 1.44974, 0.528766, 0.204902]
+time = [362.181, 36.6829, 2.43379, 1.1862]
 speedup = [time[0] / i for i in time]
 
-filename = "iceberg"
+filename = "candy"
 
 # bar chart for different thread number's CPU, COMM, IO time
 fig, ax = plt.subplots()
