@@ -1,5 +1,5 @@
 #!/bin/bash
 make clean
 make
-nvprof ./gaussian_blur ../../testcase/origin/candy.png ../../testcase/result/candy.png
+srun -N1 -n1 -c1 --gres=gpu:1 ./gaussian_blur ../../testcase/origin/jerry.png ../../testcase/result/jerry.png
 make clean
