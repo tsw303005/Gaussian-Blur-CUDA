@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-run = ["Single Thread", "Multiple Thread", "Single GPU"]
-time = [46.6573, 4.82201, 0.701165]
+run = ["Single Thread", "Multiple Thread", "Single GPU", "Multiple GPU"]
+time = [12.6372, 1.44974, 0.528766, 0.204902]
 speedup = [time[0] / i for i in time]
 
-filename = "view"
+filename = "iceberg"
 
 # bar chart for different thread number's CPU, COMM, IO time
 fig, ax = plt.subplots()
@@ -21,7 +21,7 @@ fig.savefig(f"./{filename}_timeprofile.png")
 # line seperate speedup factor
 fig, ax = plt.subplots()
 ax.plot(run, speedup, label='Speedup Time')
-ax.set_ylabel("Speedup")
+ax.set_ylabel("Speedup Factor")
 ax.set_title(f"{filename} Speedup Factor")
 ax.legend(loc="upper right")
 fig.savefig(f"./{filename}_speedup.png")
