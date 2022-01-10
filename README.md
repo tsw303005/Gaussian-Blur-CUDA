@@ -87,7 +87,7 @@ Time Profile | Speedup Factor
 :------------:|:---------------:|
 ![](./testcase/result/GPU_compare.jpeg) | ![](./testcase/result/gpu_compare_speedup.jpeg)
 
-## Acknowledge
+## Acknowledgments
 Our Gaussian Blur implementation is mainly based on the following two website.
 - [Gaussian Blur introduction](https://en.wikipedia.org/wiki/Gaussian_blur)
 - [Gaussian Blur implementation](http://blog.ivank.net/fastest-gaussian-blur.html)
