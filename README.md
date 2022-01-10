@@ -85,9 +85,7 @@ large-candy.png | 79 MB | 21.5988 (s) | 11.0503 (s)
 
 Time Profile | Speedup Factor
 :------------:|:---------------:|
-![](./testcase/result/candy_gpu_timeprofile.png) | ![](./testcase/result/candy_gpu_speedup.png)
-![](./testcase/result/jerry_gpu_timeprofile.png) | ![](./testcase/result/jerry_gpu_speedup.png)
-![](./testcase/result/large_candy_gpu_timeprofile.png) | ![](./testcase/result/large_candy_gpu_speedup.png)
+![](./testcase/result/GPU_compare.jpeg) | ![](./testcase/result/gpu_compare_speedup.jpeg)
 
 ## Acknowledge
 Our Gaussian Blur implementation is mainly based on the following two website.
