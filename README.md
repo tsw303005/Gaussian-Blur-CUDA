@@ -89,7 +89,7 @@ Time Profile | Speedup Factor
 ![](./testcase/result/jerry_gpu_timeprofile.png) | ![](./testcase/result/jerry_gpu_speedup.png)
 ![](./testcase/result/large_candy_gpu_timeprofile.png) | ![](./testcase/result/large_candy_gpu_speedup.png)
 
-## Acknowledge
+## Acknowledgments
 Our Gaussian Blur implementation is mainly based on the following two website.
 - [Gaussian Blur introduction](https://en.wikipedia.org/wiki/Gaussian_blur)
 - [Gaussian Blur implementation](http://blog.ivank.net/fastest-gaussian-blur.html)
