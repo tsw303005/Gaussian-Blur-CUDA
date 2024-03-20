@@ -7,7 +7,8 @@
 #define PI std::acos(-1)
 #define r 10
 #define rs (int)ceil((double)r * 2.57)
-#define Rs 53
+#define Rs 53 // filter matrix size
+#define BK 16 // block dim
 #define THREAD 256
 
 int read_png(const char *filename, unsigned char **image, unsigned *height, unsigned *width, unsigned *channels);
@@ -47,6 +48,7 @@ int main(int argc, char **argv)
 
     // allocate memory
     host_tar = (unsigned char*)malloc(sizeof(unsigned char) * height * width * channels);
+
     // allocate device_src more memory to prevent out of memory
     clock_gettime(CLOCK_MONOTONIC, &start); // get start time
     cudaMalloc(&device_src, height * (width + THREAD) * channels * sizeof(unsigned char));
@@ -60,13 +62,13 @@ int main(int argc, char **argv)
     cudaMemcpy(device_filter_matrix, host_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1), cudaMemcpyHostToDevice);
 
     // calculate block size and thread number
-    int thread_num = THREAD;
-    int x = (width % thread_num) ? width / thread_num + 1 : width / thread_num;
-    int y = 1024;
-    dim3 blocks(x, y);
+    int x = (width % BK) ? width / BK + 1 : width / BK;
+    int y = (height % BK) ? height / BK + 1 : height / BK;
+    dim3 blocks_size(x, y);
+    dim3 threads_size(THREAD);
 
     // gaussian blur algorithm
-    gaussian_blur<<<blocks, thread_num>>>(device_src, device_tar, device_filter_matrix, height, width, channels, wsum);
+    gaussian_blur<<<blocks_size, threads_size>>>(device_src, device_tar, device_filter_matrix, height, width, channels, wsum);
 
     // write result back to host
     cudaMemcpy(host_tar, device_tar, height * width * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
@@ -92,50 +94,45 @@ int main(int argc, char **argv)
 }
 
 __global__ void gaussian_blur(unsigned char *src, unsigned char *tar, double *device_filter_matrix, unsigned height, unsigned width, unsigned channels, double wsum) {
-    __shared__ unsigned char R_arr[Rs][THREAD + Rs];
-    __shared__ unsigned char G_arr[Rs][THREAD + Rs];
-    __shared__ unsigned char B_arr[Rs][THREAD + Rs];
+    __shared__ unsigned char R_arr[Rs + BK][Rs + BK];
+    __shared__ unsigned char G_arr[Rs + BK][Rs + BK];
+    __shared__ unsigned char B_arr[Rs + BK][Rs + BK];
 
-    int x, y, iy, a, b, i, j;
-    double val[3];
-    x = blockDim.x * blockIdx.x + threadIdx.x;
-    y = blockIdx.y;
+    int row = blockIdx.y * blockDim.y + threadIdx.x / BK;
+    int col = blockIdx.x * blockDim.x + threadIdx.x % BK;
+    int row_pixel = row * width;
+    int col_pixel = col;
+    int row_inner = threadIdx.x / BK;
+    int col_inner = threadIdx.x % BK;
+    int get_row_pixel, get_col_pixel;
+    double result[3];
 
-    for (; y < height; y += gridDim.y) {
-        #pragma unroll (5)
-        for (iy = y - rs; iy < y + rs + 1; iy++) {
-            a = min((int)height-1, max(0, iy));
-            R_arr[iy + rs - y][threadIdx.x + rs] = src[channels * (width * a + x) + 2];
-            G_arr[iy + rs - y][threadIdx.x + rs] = src[channels * (width * a + x) + 1];
-            B_arr[iy + rs - y][threadIdx.x + rs] = src[channels * (width * a + x) + 0];
-            if (threadIdx.x < rs) {
-                b = min((int)width-1, max(0, x - rs));
-                R_arr[iy + rs - y][threadIdx.x] = src[channels * (width * a + b) + 2];
-                G_arr[iy + rs - y][threadIdx.x] = src[channels * (width * a + b) + 1];
-                B_arr[iy + rs - y][threadIdx.x] = src[channels * (width * a + b) + 0];
-            } else if (THREAD - 1 - threadIdx.x < rs) {
-                b = min((int)width-1, max(0, x + rs));
-                R_arr[iy + rs - y][threadIdx.x + 2 * rs] = src[channels * (width * a + b) + 2];
-                G_arr[iy + rs - y][threadIdx.x + 2 * rs] = src[channels * (width * a + b) + 1];
-                B_arr[iy + rs - y][threadIdx.x + 2 * rs] = src[channels * (width * a + b) + 0];
+    if (row_pixel < height and col_pixel < width) {
+        for (int i = 0; i <= Rs + BK; i += 2) { // 2 = threadnum / 128
+            for (int j = threadIdx.x; j <= Rs + BK; j += 128) {
+                get_row_pixel = min(height - 1, max(0, row_pixel - rs + i));
+                get_col_pixel = min(width - 1, max(0, col_pixel - rs + j));
+                R_arr[i][j] = src[(get_row_pixel * width + get_col_pixel) * channels + 2];
+                G_arr[i][j] = src[(get_row_pixel * width + get_col_pixel)* channels + 1];
+                B_arr[i][j] = src[(get_row_pixel * width + get_col_pixel) * channels + 0];
             }
         }
         __syncthreads();
 
-        val[0] = val[1] = val[2] = 0.0;
-        for (i = 0; i < Rs; i++) {
-            for (j = 0; j < Rs; j++) {
-                val[2] += (double)R_arr[i][threadIdx.x + j] * device_filter_matrix[Rs * i + j];
-                val[1] += (double)G_arr[i][threadIdx.x + j] * device_filter_matrix[Rs * i + j];
-                val[0] += (double)B_arr[i][threadIdx.x + j] * device_filter_matrix[Rs * i + j];
+        result[0] = result[1] = result[2] = 0.0;
+        for (int i = 0; i < Rs; i++) {
+            for (int j = 0; j < Rs; j++) {
+                result[2] += (double)R_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * i + j];
+                result[1] += (double)G_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * i + j];
+                result[0] += (double)B_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * i + j];
             }
         }
-        if (x < width) {
-            tar[channels * (width * y + x) + 2] = round(val[2] / wsum);
-            tar[channels * (width * y + x) + 1] = round(val[1] / wsum);
-            tar[channels * (width * y + x) + 0] = round(val[0] / wsum);
-        }
+
+        tar[channels * (row_pixel * width + col_pixel) + 2] = round(result[2] / wsum);
+        tar[channels * (row_pixel * width + col_pixel) + 1] = round(result[1] / wsum);
+        tar[channels * (row_pixel * width + col_pixel) + 0] = round(result[0] / wsum);
     }
+    
 }
 
 void gaussian_filter(double **host_filter_matrix, double *wsum) {
