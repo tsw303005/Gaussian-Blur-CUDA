@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     // precalculate gaussian filter
     gaussian_filter(&host_filter_matrix, &wsum);
 
-    cudaMalloc(&device_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1));
+    cudaMalloc((void**)(&device_filter_matrix), sizeof(double) * (2 * rs + 1) * (2 * rs + 1));
     cudaMemcpy(device_filter_matrix, host_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1), cudaMemcpyHostToDevice);
 
     // calculate block size and thread number
@@ -70,10 +70,13 @@ int main(int argc, char **argv)
     // gaussian blur algorithm
     gaussian_blur<<<blocks_size, threads_size>>>(device_src, device_tar, device_filter_matrix, height, width, channels, wsum);
 
-    // write result back to host
-    cudaMemcpy(host_tar, device_tar, height * width * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
     clock_gettime(CLOCK_MONOTONIC, &timeEnd); // get end time
     total_time += timeDiff(start, timeEnd); // update computation time
+
+    // write result back to host
+    cudaMemcpy(host_tar, device_tar, height * width * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+    // clock_gettime(CLOCK_MONOTONIC, &timeEnd); // get end time
+    // total_time += timeDiff(start, timeEnd); // update computation time
 
     // write image back
     // write_png(argv[2], host_tar, height, width, channels);
