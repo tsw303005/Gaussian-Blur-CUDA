@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     total_time += timeDiff(start, timeEnd); // update computation time
 
     // write image back
-    write_png(argv[2], host_tar, height, width, channels);
+    // write_png(argv[2], host_tar, height, width, channels);
 
     std::cout << "[Info]: Result saved in " << argv[2] << std::endl;
     std::cout << "[Info]: Calculation -------- SUCCESS\n";
@@ -98,20 +98,20 @@ __global__ void gaussian_blur(unsigned char *src, unsigned char *tar, double *de
     __shared__ unsigned char G_arr[Rs + BK][Rs + BK];
     __shared__ unsigned char B_arr[Rs + BK][Rs + BK];
 
-    int row = blockIdx.y * blockDim.y + threadIdx.x / BK;
-    int col = blockIdx.x * blockDim.x + threadIdx.x % BK;
-    int row_pixel = row * width;
-    int col_pixel = col;
+    int row_block = blockIdx.y * BK;
+    int col_block = blockIdx.x * BK;
+    int row_pixel = row_block + threadIdx.x / BK;
+    int col_pixel = col_block + threadIdx.x % BK;
     int row_inner = threadIdx.x / BK;
     int col_inner = threadIdx.x % BK;
     int get_row_pixel, get_col_pixel;
     double result[3];
 
     if (row_pixel < height and col_pixel < width) {
-        for (int i = 0; i <= Rs + BK; i += 2) { // 2 = threadnum / 128
-            for (int j = threadIdx.x; j <= Rs + BK; j += 128) {
-                get_row_pixel = min(height - 1, max(0, row_pixel - rs + i));
-                get_col_pixel = min(width - 1, max(0, col_pixel - rs + j));
+        for (int i = threadIdx.x / 64; i < Rs + BK; i += 4) { // 4 = threadnum / 64
+            for (int j = threadIdx.x % 64; j < Rs + BK; j += 64) {
+                get_row_pixel = min(height - 1, max(0, row_block - rs + i));
+                get_col_pixel = min(width - 1, max(0, col_block - rs + j));
                 R_arr[i][j] = src[(get_row_pixel * width + get_col_pixel) * channels + 2];
                 G_arr[i][j] = src[(get_row_pixel * width + get_col_pixel)* channels + 1];
                 B_arr[i][j] = src[(get_row_pixel * width + get_col_pixel) * channels + 0];
@@ -120,11 +120,11 @@ __global__ void gaussian_blur(unsigned char *src, unsigned char *tar, double *de
         __syncthreads();
 
         result[0] = result[1] = result[2] = 0.0;
-        for (int i = 0; i < Rs; i++) {
-            for (int j = 0; j < Rs; j++) {
-                result[2] += (double)R_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * i + j];
-                result[1] += (double)G_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * i + j];
-                result[0] += (double)B_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * i + j];
+        for (int i = 0; i <= Rs; i++) {
+            for (int j = 0; j <= Rs; j++) {
+                result[2] += (double)R_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * j + i];
+                result[1] += (double)G_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * j + i];
+                result[0] += (double)B_arr[row_inner + i][col_inner + j] * device_filter_matrix[Rs * j + i];
             }
         }
 
