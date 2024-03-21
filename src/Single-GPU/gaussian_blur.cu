@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
     // allocate device_src more memory to prevent out of memory
     clock_gettime(CLOCK_MONOTONIC, &start); // get start time
-    cudaMalloc(&device_src, height * (width + THREAD) * channels * sizeof(unsigned char));
+    cudaMalloc(&device_src, height * width * channels * sizeof(unsigned char));
     cudaMalloc(&device_tar, height * width * channels * sizeof(unsigned char));
     cudaMemcpy(device_src, host_src, height * width * channels * sizeof(unsigned char), cudaMemcpyHostToDevice);
 
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     gaussian_filter(&host_filter_matrix, &wsum);
 
     cudaMalloc((void**)(&device_filter_matrix), sizeof(double) * (2 * rs + 1) * (2 * rs + 1));
-    cudaMemcpy(device_filter_matrix, host_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)device_filter_matrix, host_filter_matrix, sizeof(double) * (2 * rs + 1) * (2 * rs + 1), cudaMemcpyHostToDevice);
 
     // calculate block size and thread number
     int x = (width % BK) ? width / BK + 1 : width / BK;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     // total_time += timeDiff(start, timeEnd); // update computation time
 
     // write image back
-    // write_png(argv[2], host_tar, height, width, channels);
+    write_png(argv[2], host_tar, height, width, channels);
 
     std::cout << "[Info]: Result saved in " << argv[2] << std::endl;
     std::cout << "[Info]: Calculation -------- SUCCESS\n";
