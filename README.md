@@ -1,22 +1,7 @@
 # Gaussian-Blur-CUDA
-- We implement Gaussian Blur with C++ (Sequential), OpenMP, and CUDA
+- We implement Gaussian Blur with CUDA
 - We used different size image to compare their performance
 
-## Build with
-- C++
-- OpenMP
-- CUDA
-
-## Getting Started
-1. cd into the directory
-2. modify the script.sh to choose the input and filter size you want
-3. execute the script.sh (make sure Makefile is here)</br>
-- Example to execute single-gpu program (make sure that you have already had gpu and cuda installed)
-
-```
-cd src/Single-GPU
-./script.sh
-```
 
 ## Result
 Before | After
@@ -29,29 +14,7 @@ Before | After
 ## Experiment
 - CPU: Intel(R) Xeon(R) CPU           X5670  @ 2.93GHz
 - GPU: GEFORCE GTX 1080 Ti
-### Single Thread with different Optimization Skill
-- Compare their **computation time** in same testcase
-- V1: Original Gaussian Blur Algorithm
-- V2: Add ffast-math flag to speed up the math operation
-- V3: Calculate Gaussian Filter to save redundant operation
 
-
-Filename | Size | V1 | V2 | V3
-:----------:|:-----------------:|:-------------------:|:----------:|:-----------------:
-bridge.png|2.1 MB|151.34(s)|123.039(s)|35.3384(s)
-
-Time Profile | Speedup Factor
-:------------:|:---------------:|
-![](./testcase/result/CPU-Optimization-Compare_timeprofile.png) | ![](./testcase/result/CPU-Optimization-Compare_speedup.png)
-
-### Performance Comparison with different Thread number
-Filename | Size | 1 thread | 2 thread | 4 thread | 8 thread | 12 thread
-:----------:|:-----------------:|:-------------------:|:----------:|:-----------------:|:--------------:|:------
-view.png|2.1 MB|25.0505(s)|12.566(s)|6.27131(s)|4.83035(s)|2.14292(s)
-
-Time Profile | Speedup Factor
-:------------:|:---------------:|
-![](./testcase/result/Different-Thread-Compare_timeprofile.png) | ![](./testcase/result/Different-Thread-Compare_speedup.png)
 
 
 ### Computation Performance Comparison between Sequential, OpenMP, CUDA
